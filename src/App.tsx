@@ -12,7 +12,6 @@ import IdeaDetails from "./pages/IdeaDetails";
 import SubmitIdea from "./pages/SubmitIdea";
 import Jobs from "./pages/Jobs";
 import JobDetails from "./pages/JobDetails";
-import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import PublicProfile from "./pages/PublicProfile";
 import Login from "./pages/Login";
@@ -36,7 +35,6 @@ const App = () => (
               <Route path="/submit-idea" element={<SubmitIdea />} />
               <Route path="/jobs" element={<Jobs />} />
               <Route path="/jobs/:id" element={<JobDetails />} />
-              <Route path="/messages" element={<Messages />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/profile/:username" element={<PublicProfile />} />
               <Route path="/login" element={<Login />} />

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -108,16 +109,16 @@ const Home = () => {
       <div className="space-y-16">
         {/* Hero Section */}
         <section className="relative overflow-hidden">
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(48, 55, 68, 0.1), rgba(180, 197, 228, 0.1))' }} />
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10" />
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
             <div className="text-center space-y-8">
               <h1 className="text-4xl md:text-6xl font-bold text-slate-900">
                 Where{' '}
-                <span style={{ background: 'linear-gradient(to right, #303744, #B4C5E4)', backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}>
+                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   Innovation
                 </span>{' '}
                 Meets{' '}
-                <span style={{ background: 'linear-gradient(to right, #B4C5E4, #303744)', backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}>
+                <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                   Collaboration
                 </span>
               </h1>
@@ -127,12 +128,12 @@ const Home = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/register">
-                  <Button size="lg" className="text-white" style={{ background: 'linear-gradient(to right, #303744, #B4C5E4)' }}>
+                  <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
                     Get Started
                   </Button>
                 </Link>
                 <Link to="/ideas">
-                  <Button size="lg" variant="outline" style={{ borderColor: '#B4C5E4', color: '#303744' }}>
+                  <Button size="lg" variant="outline">
                     Browse Ideas
                   </Button>
                 </Link>
@@ -151,7 +152,7 @@ const Home = () => {
         <CardContent className="pt-6">
           <div className="flex items-center space-x-4">
             <Avatar className="w-12 h-12">
-              <AvatarFallback style={{ background: 'linear-gradient(to right, #303744, #B4C5E4)' }} className="text-white">
+              <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
                 {user.name.split(' ').map(n => n[0]).join('')}
               </AvatarFallback>
             </Avatar>
@@ -175,7 +176,7 @@ const Home = () => {
             </Button>
             <Button
               variant="ghost"
-              className="flex-1 text-slate-600 hover:text-indigo-600"
+              className="flex-1 text-slate-600 hover:text-purple-600"
               onClick={() => setIsCreateModalOpen(true)}
             >
               <Lightbulb className="w-4 h-4 mr-2" />
@@ -183,7 +184,7 @@ const Home = () => {
             </Button>
             <Button
               variant="ghost"
-              className="flex-1 text-slate-600 hover:text-slate-700"
+              className="flex-1 text-slate-600 hover:text-green-600"
               onClick={() => setIsCreateModalOpen(true)}
             >
               <Briefcase className="w-4 h-4 mr-2" />
@@ -198,8 +199,8 @@ const Home = () => {
         <Card className="text-center">
           <CardContent className="pt-4">
             <div className="flex justify-center mb-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#B4C5E4' }}>
-                <Lightbulb className="w-4 h-4" style={{ color: '#303744' }} />
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Lightbulb className="w-4 h-4 text-blue-600" />
               </div>
             </div>
             <div className="text-lg font-semibold">127</div>
@@ -209,8 +210,8 @@ const Home = () => {
         <Card className="text-center">
           <CardContent className="pt-4">
             <div className="flex justify-center mb-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#303744' }}>
-                <Briefcase className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                <Briefcase className="w-4 h-4 text-green-600" />
               </div>
             </div>
             <div className="text-lg font-semibold">89</div>
@@ -220,8 +221,8 @@ const Home = () => {
         <Card className="text-center">
           <CardContent className="pt-4">
             <div className="flex justify-center mb-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(to right, #303744, #B4C5E4)' }}>
-                <Users className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Users className="w-4 h-4 text-purple-600" />
               </div>
             </div>
             <div className="text-lg font-semibold">1.2k</div>
@@ -239,7 +240,7 @@ const Home = () => {
 
       {/* Load More */}
       <div className="text-center py-8">
-        <Button variant="outline" style={{ borderColor: '#B4C5E4', color: '#303744' }}>
+        <Button variant="outline">
           Load More Posts
         </Button>
       </div>
