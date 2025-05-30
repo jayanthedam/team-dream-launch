@@ -1,207 +1,256 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Lightbulb, Users, Rocket, TrendingUp, ArrowRight, Star } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { PenSquare, Plus, TrendingUp, Users, Lightbulb, Briefcase } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import CreatePostModal from '@/components/CreatePostModal';
+import FeedItem from '@/components/FeedItem';
 
 const Home = () => {
   const { user } = useAuth();
-
-  const featuredIdeas = [
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [feedItems, setFeedItems] = useState([
     {
       id: 1,
-      title: 'EcoTrack - Sustainable Living App',
-      description: 'Help users track their carbon footprint and discover eco-friendly alternatives',
+      type: 'idea' as const,
       author: 'Sarah Johnson',
-      tags: ['React', 'Node.js', 'Environment'],
-      collaborators: 3,
-      status: 'Active'
+      authorRole: 'Environmental Engineer',
+      title: 'EcoTrack - Sustainable Living App',
+      description: 'Help users track their carbon footprint and discover eco-friendly alternatives in their daily lives',
+      tags: ['React Native', 'Sustainability', 'Mobile'],
+      likes: 24,
+      comments: 8,
+      shares: 3,
+      timestamp: '3 hours ago'
     },
     {
       id: 2,
-      title: 'AI-Powered Learning Platform',
-      description: 'Personalized education platform using machine learning algorithms',
+      type: 'job' as const,
       author: 'Alex Chen',
-      tags: ['Python', 'Machine Learning', 'Education'],
-      collaborators: 5,
-      status: 'Active'
+      authorRole: 'CTO at TechCorp',
+      title: 'Senior React Developer',
+      description: 'Join our team to build the next generation of web applications',
+      location: 'Remote',
+      compensation: '$80k-120k',
+      tags: ['React', 'TypeScript', 'Node.js'],
+      likes: 15,
+      comments: 12,
+      shares: 5,
+      timestamp: '5 hours ago'
     },
     {
       id: 3,
-      title: 'Local Business Network',
-      description: 'Connect local businesses with customers and service providers',
+      type: 'post' as const,
       author: 'Maria Rodriguez',
-      tags: ['React Native', 'GraphQL', 'Business'],
-      collaborators: 2,
-      status: 'Planning'
+      authorRole: 'Product Designer',
+      content: 'Just launched our new design system! Excited to see how it improves our development workflow. The key was focusing on consistency and developer experience. #designsystem #ux #productivity',
+      likes: 42,
+      comments: 16,
+      shares: 8,
+      timestamp: '1 day ago'
+    },
+    {
+      id: 4,
+      type: 'idea' as const,
+      author: 'David Kim',
+      authorRole: 'AI Researcher',
+      title: 'AI-Powered Learning Assistant',
+      description: 'Personalized education platform using machine learning to adapt to each student\'s learning style',
+      tags: ['AI', 'Education', 'Python'],
+      likes: 67,
+      comments: 23,
+      shares: 12,
+      timestamp: '2 days ago'
+    },
+    {
+      id: 5,
+      type: 'job' as const,
+      author: 'Lisa Zhang',
+      authorRole: 'Startup Founder',
+      title: 'UX/UI Designer',
+      description: 'Looking for a creative designer to help shape the future of fintech',
+      location: 'San Francisco, CA',
+      compensation: 'Equity + $70k',
+      tags: ['Figma', 'Fintech', 'Design'],
+      likes: 28,
+      comments: 9,
+      shares: 4,
+      timestamp: '3 days ago'
     }
-  ];
+  ]);
 
-  const stats = [
-    { label: 'Active Projects', value: '127', icon: Rocket },
-    { label: 'Collaborators', value: '1,240', icon: Users },
-    { label: 'Success Stories', value: '89', icon: Star },
-    { label: 'Growth Rate', value: '34%', icon: TrendingUp }
-  ];
+  const handleCreatePost = (data: any) => {
+    const newItem = {
+      id: feedItems.length + 1,
+      type: data.type,
+      author: user?.name || 'Anonymous',
+      authorRole: user?.role || 'Member',
+      content: data.content,
+      title: data.title,
+      description: data.description,
+      location: data.location,
+      compensation: data.compensation,
+      tags: data.tags,
+      likes: 0,
+      comments: 0,
+      shares: 0,
+      timestamp: 'Just now'
+    };
+    setFeedItems([newItem, ...feedItems]);
+  };
 
-  return (
-    <div className="space-y-16">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="text-center space-y-8">
-            <h1 className="text-4xl md:text-6xl font-bold text-slate-900">
-              Where{' '}
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Innovation
-              </span>{' '}
-              Meets{' '}
-              <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Collaboration
-              </span>
-            </h1>
-            <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-              Join thousands of innovators, developers, and creators building the future together. 
-              Share your ideas, find collaborators, and turn your vision into reality.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {user ? (
-                <Link to="/ideas">
+  if (!user) {
+    // Show original hero page for non-logged in users
+    return (
+      <div className="space-y-16">
+        {/* Hero Section */}
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10" />
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <div className="text-center space-y-8">
+              <h1 className="text-4xl md:text-6xl font-bold text-slate-900">
+                Where{' '}
+                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Innovation
+                </span>{' '}
+                Meets{' '}
+                <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  Collaboration
+                </span>
+              </h1>
+              <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+                Join thousands of innovators, developers, and creators building the future together. 
+                Share your ideas, find collaborators, and turn your vision into reality.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link to="/register">
                   <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                    <Lightbulb className="w-5 h-5 mr-2" />
-                    Explore Ideas
+                    Get Started
                   </Button>
                 </Link>
-              ) : (
-                <>
-                  <Link to="/register">
-                    <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                      Get Started
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </Button>
-                  </Link>
-                  <Link to="/ideas">
-                    <Button size="lg" variant="outline">
-                      Browse Ideas
-                    </Button>
-                  </Link>
-                </>
-              )}
+                <Link to="/ideas">
+                  <Button size="lg" variant="outline">
+                    Browse Ideas
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
+    );
+  }
 
-      {/* Stats Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {stats.map((stat, index) => (
-            <Card key={index} className="text-center hover:shadow-lg transition-shadow">
-              <CardContent className="pt-6">
-                <div className="flex justify-center mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                    <stat.icon className="w-6 h-6 text-white" />
-                  </div>
-                </div>
-                <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
-                <div className="text-sm text-slate-600">{stat.label}</div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* Featured Ideas Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">Featured Ideas</h2>
-          <p className="text-lg text-slate-600">Discover innovative projects looking for collaborators</p>
-        </div>
-        
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredIdeas.map((idea) => (
-            <Card key={idea.id} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{idea.title}</CardTitle>
-                  <Badge variant={idea.status === 'Active' ? 'default' : 'secondary'}>
-                    {idea.status}
-                  </Badge>
-                </div>
-                <CardDescription className="text-slate-600">
-                  {idea.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-2">
-                    {idea.tags.map((tag) => (
-                      <Badge key={tag} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div className="text-sm text-slate-600">
-                      by {idea.author}
-                    </div>
-                    <div className="flex items-center text-sm text-slate-600">
-                      <Users className="w-4 h-4 mr-1" />
-                      {idea.collaborators} collaborators
-                    </div>
-                  </div>
-                  <Link to={`/ideas/${idea.id}`}>
-                    <Button className="w-full" variant="outline">
-                      View Details
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div className="text-center mt-8">
-          <Link to="/ideas">
-            <Button size="lg" variant="outline">
-              View All Ideas
-              <ArrowRight className="w-5 h-5 ml-2" />
+  return (
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* Create Post Section */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center space-x-4">
+            <Avatar className="w-12 h-12">
+              <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+                {user.name.split(' ').map(n => n[0]).join('')}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <Input
+                placeholder="Share an update, idea, or opportunity..."
+                className="cursor-pointer"
+                onClick={() => setIsCreateModalOpen(true)}
+                readOnly
+              />
+            </div>
+          </div>
+          <div className="flex justify-center gap-4 mt-4 pt-4 border-t border-slate-100">
+            <Button
+              variant="ghost"
+              className="flex-1 text-slate-600 hover:text-blue-600"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              <PenSquare className="w-4 h-4 mr-2" />
+              Post
             </Button>
-          </Link>
-        </div>
-      </section>
+            <Button
+              variant="ghost"
+              className="flex-1 text-slate-600 hover:text-purple-600"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              <Lightbulb className="w-4 h-4 mr-2" />
+              Idea
+            </Button>
+            <Button
+              variant="ghost"
+              className="flex-1 text-slate-600 hover:text-green-600"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              <Briefcase className="w-4 h-4 mr-2" />
+              Job
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* CTA Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-          <CardContent className="text-center py-12">
-            <h2 className="text-3xl font-bold mb-4">Ready to Start Your Next Project?</h2>
-            <p className="text-lg mb-8 opacity-90">
-              Join our community of innovators and turn your ideas into reality
-            </p>
-            {user ? (
-              <Link to="/ideas">
-                <Button size="lg" variant="secondary">
-                  Share Your Idea
-                  <Lightbulb className="w-5 h-5 ml-2" />
-                </Button>
-              </Link>
-            ) : (
-              <Link to="/register">
-                <Button size="lg" variant="secondary">
-                  Join CollabOppt
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-              </Link>
-            )}
+      {/* Quick Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        <Card className="text-center">
+          <CardContent className="pt-4">
+            <div className="flex justify-center mb-2">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Lightbulb className="w-4 h-4 text-blue-600" />
+              </div>
+            </div>
+            <div className="text-lg font-semibold">127</div>
+            <div className="text-sm text-slate-600">Active Ideas</div>
           </CardContent>
         </Card>
-      </section>
+        <Card className="text-center">
+          <CardContent className="pt-4">
+            <div className="flex justify-center mb-2">
+              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                <Briefcase className="w-4 h-4 text-green-600" />
+              </div>
+            </div>
+            <div className="text-lg font-semibold">89</div>
+            <div className="text-sm text-slate-600">Open Jobs</div>
+          </CardContent>
+        </Card>
+        <Card className="text-center">
+          <CardContent className="pt-4">
+            <div className="flex justify-center mb-2">
+              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Users className="w-4 h-4 text-purple-600" />
+              </div>
+            </div>
+            <div className="text-lg font-semibold">1.2k</div>
+            <div className="text-sm text-slate-600">Members</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Feed */}
+      <div className="space-y-6">
+        {feedItems.map((item) => (
+          <FeedItem key={item.id} item={item} />
+        ))}
+      </div>
+
+      {/* Load More */}
+      <div className="text-center py-8">
+        <Button variant="outline">
+          Load More Posts
+        </Button>
+      </div>
+
+      {/* Create Post Modal */}
+      <CreatePostModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreatePost}
+      />
     </div>
   );
 };
