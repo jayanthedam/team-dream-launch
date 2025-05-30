@@ -62,7 +62,7 @@ const FeedItem = ({ item }: FeedItemProps) => {
       <CardHeader className="pb-3">
         <div className="flex items-center space-x-3">
           <Avatar className="w-10 h-10">
-            <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+            <AvatarFallback style={{ background: 'linear-gradient(to right, #303744, #B4C5E4)' }} className="text-white">
               {item.author.split(' ').map(n => n[0]).join('')}
             </AvatarFallback>
           </Avatar>
@@ -72,7 +72,7 @@ const FeedItem = ({ item }: FeedItemProps) => {
                 {item.author}
               </Link>
               {item.type !== 'post' && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs" style={{ borderColor: '#B4C5E4', color: '#303744' }}>
                   {getIcon()}
                   <span className="ml-1 capitalize">{item.type}</span>
                 </Badge>
@@ -117,12 +117,12 @@ const FeedItem = ({ item }: FeedItemProps) => {
             {item.tags && item.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {item.tags.slice(0, 3).map((tag) => (
-                  <Badge key={tag} variant="secondary" className="text-xs">
+                  <Badge key={tag} variant="secondary" className="text-xs" style={{ backgroundColor: '#B4C5E4', color: '#303744' }}>
                     {tag}
                   </Badge>
                 ))}
                 {item.tags.length > 3 && (
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs" style={{ borderColor: '#B4C5E4', color: '#303744' }}>
                     +{item.tags.length - 3} more
                   </Badge>
                 )}
@@ -130,7 +130,7 @@ const FeedItem = ({ item }: FeedItemProps) => {
             )}
 
             <Link to={getDetailLink()}>
-              <Button variant="outline" size="sm" className="mt-2">
+              <Button variant="outline" size="sm" className="mt-2" style={{ borderColor: '#B4C5E4', color: '#303744' }}>
                 View Details
               </Button>
             </Link>
