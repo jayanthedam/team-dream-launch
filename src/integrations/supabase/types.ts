@@ -9,7 +9,424 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      conversations: {
+        Row: {
+          id: string
+          last_message_at: string | null
+          participant_1_id: string
+          participant_2_id: string
+        }
+        Insert: {
+          id?: string
+          last_message_at?: string | null
+          participant_1_id: string
+          participant_2_id: string
+        }
+        Update: {
+          id?: string
+          last_message_at?: string | null
+          participant_1_id?: string
+          participant_2_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_participant_1_id_fkey"
+            columns: ["participant_1_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_participant_2_id_fkey"
+            columns: ["participant_2_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      idea_comments: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string | null
+          id: string
+          idea_id: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string | null
+          id?: string
+          idea_id: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          idea_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "idea_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "idea_comments_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: false
+            referencedRelation: "ideas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      idea_likes: {
+        Row: {
+          created_at: string | null
+          id: string
+          idea_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          idea_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          idea_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "idea_likes_idea_id_fkey"
+            columns: ["idea_id"]
+            isOneToOne: false
+            referencedRelation: "ideas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "idea_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ideas: {
+        Row: {
+          author_id: string
+          collaborators_count: number | null
+          comments_count: number | null
+          commitment: string | null
+          created_at: string | null
+          description: string
+          full_description: string
+          id: string
+          likes_count: number | null
+          project_type: string
+          skills_needed: string[] | null
+          status: string | null
+          tags: string[] | null
+          timeline: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_id: string
+          collaborators_count?: number | null
+          comments_count?: number | null
+          commitment?: string | null
+          created_at?: string | null
+          description: string
+          full_description: string
+          id?: string
+          likes_count?: number | null
+          project_type: string
+          skills_needed?: string[] | null
+          status?: string | null
+          tags?: string[] | null
+          timeline?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string
+          collaborators_count?: number | null
+          comments_count?: number | null
+          commitment?: string | null
+          created_at?: string | null
+          description?: string
+          full_description?: string
+          id?: string
+          likes_count?: number | null
+          project_type?: string
+          skills_needed?: string[] | null
+          status?: string | null
+          tags?: string[] | null
+          timeline?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ideas_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_applications: {
+        Row: {
+          applicant_id: string
+          created_at: string | null
+          id: string
+          job_id: string
+          message: string | null
+          status: string | null
+        }
+        Insert: {
+          applicant_id: string
+          created_at?: string | null
+          id?: string
+          job_id: string
+          message?: string | null
+          status?: string | null
+        }
+        Update: {
+          applicant_id?: string
+          created_at?: string | null
+          id?: string
+          job_id?: string
+          message?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_comments: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string | null
+          id: string
+          job_id: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string | null
+          id?: string
+          job_id: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          job_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_comments_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          applicants_count: number | null
+          author_id: string
+          benefits: string[] | null
+          company_size: string | null
+          compensation: string
+          created_at: string | null
+          description: string
+          experience_level: string | null
+          full_description: string
+          id: string
+          location: string
+          project: string
+          skills: string[] | null
+          status: string | null
+          time_commitment: string | null
+          title: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          applicants_count?: number | null
+          author_id: string
+          benefits?: string[] | null
+          company_size?: string | null
+          compensation: string
+          created_at?: string | null
+          description: string
+          experience_level?: string | null
+          full_description: string
+          id?: string
+          location: string
+          project: string
+          skills?: string[] | null
+          status?: string | null
+          time_commitment?: string | null
+          title: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          applicants_count?: number | null
+          author_id?: string
+          benefits?: string[] | null
+          company_size?: string | null
+          compensation?: string
+          created_at?: string | null
+          description?: string
+          experience_level?: string | null
+          full_description?: string
+          id?: string
+          location?: string
+          project?: string
+          skills?: string[] | null
+          status?: string | null
+          time_commitment?: string | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          read: boolean | null
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          read?: boolean | null
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          read?: boolean | null
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          email: string
+          github: string | null
+          id: string
+          linkedin: string | null
+          location: string | null
+          name: string
+          role: string | null
+          skills: string[] | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          email: string
+          github?: string | null
+          id: string
+          linkedin?: string | null
+          location?: string | null
+          name: string
+          role?: string | null
+          skills?: string[] | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          email?: string
+          github?: string | null
+          id?: string
+          linkedin?: string | null
+          location?: string | null
+          name?: string
+          role?: string | null
+          skills?: string[] | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
