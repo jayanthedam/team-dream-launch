@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const IdeaDetails = () => {
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [newComment, setNewComment] = useState('');
   const [isLiked, setIsLiked] = useState(false);
   const [comments, setComments] = useState([
@@ -67,7 +67,7 @@ const IdeaDetails = () => {
     if (newComment.trim() && user) {
       const comment = {
         id: comments.length + 1,
-        user: user.name,
+        user: profile?.name || user.email || 'Anonymous',
         text: newComment,
         createdAt: 'Just now'
       };

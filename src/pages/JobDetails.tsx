@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const JobDetails = () => {
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [newMessage, setNewMessage] = useState('');
   const [hasApplied, setHasApplied] = useState(false);
   const [messages, setMessages] = useState([
@@ -77,7 +77,7 @@ const JobDetails = () => {
     if (newMessage.trim() && user) {
       const message = {
         id: messages.length + 1,
-        user: user.name,
+        user: profile?.name || user.email || 'Anonymous',
         text: newMessage,
         createdAt: 'Just now'
       };

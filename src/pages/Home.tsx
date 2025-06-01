@@ -11,7 +11,7 @@ import CreatePostModal from '@/components/CreatePostModal';
 import FeedItem from '@/components/FeedItem';
 
 const Home = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [feedItems, setFeedItems] = useState([
     {
@@ -87,8 +87,8 @@ const Home = () => {
     const newItem = {
       id: feedItems.length + 1,
       type: data.type,
-      author: user?.name || 'Anonymous',
-      authorRole: user?.role || 'Member',
+      author: profile?.name || user?.email || 'Anonymous',
+      authorRole: profile?.role || 'Member',
       content: data.content,
       title: data.title,
       description: data.description,
@@ -153,7 +153,7 @@ const Home = () => {
           <div className="flex items-center space-x-4">
             <Avatar className="w-12 h-12">
               <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
-                {user.name.split(' ').map(n => n[0]).join('')}
+                {profile?.name ? profile.name.split(' ').map(n => n[0]).join('') : user.email?.charAt(0) || 'U'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">

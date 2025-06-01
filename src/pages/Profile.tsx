@@ -11,15 +11,15 @@ import { Edit, Save, X, Plus, MapPin, Calendar, Mail, Github, Linkedin, Globe } 
 import { useAuth } from '@/contexts/AuthContext';
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
-    name: user?.name || '',
-    bio: user?.bio || '',
-    location: 'San Francisco, CA',
-    website: 'https://johndoe.dev',
-    github: 'github.com/johndoe',
-    linkedin: 'linkedin.com/in/johndoe'
+    name: profile?.name || '',
+    bio: profile?.bio || '',
+    location: profile?.location || 'San Francisco, CA',
+    website: profile?.website || 'https://johndoe.dev',
+    github: profile?.github || 'github.com/johndoe',
+    linkedin: profile?.linkedin || 'linkedin.com/in/johndoe'
   });
 
   const userProjects = [
@@ -46,7 +46,7 @@ const Profile = () => {
     'GraphQL', 'React Native', 'Python', 'Machine Learning'
   ];
 
-  const [userSkills, setUserSkills] = useState(skills.slice(0, 6));
+  const [userSkills, setUserSkills] = useState(profile?.skills || skills.slice(0, 6));
   const [newSkill, setNewSkill] = useState('');
 
   const handleSave = () => {
@@ -79,6 +79,9 @@ const Profile = () => {
     );
   }
 
+  const displayName = profile?.name || user.email || 'User';
+  const userInitials = profile?.name ? profile.name.split(' ').map(n => n[0]).join('') : user.email?.charAt(0) || 'U';
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Profile Header */}
@@ -88,7 +91,7 @@ const Profile = () => {
             <div className="flex items-center space-x-6">
               <Avatar className="w-20 h-20">
                 <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white text-2xl">
-                  {user.name.split(' ').map(n => n[0]).join('')}
+                  {userInitials}
                 </AvatarFallback>
               </Avatar>
               <div className="space-y-2">
@@ -99,9 +102,9 @@ const Profile = () => {
                     className="text-2xl font-bold"
                   />
                 ) : (
-                  <h1 className="text-2xl font-bold text-slate-900">{user.name}</h1>
+                  <h1 className="text-2xl font-bold text-slate-900">{displayName}</h1>
                 )}
-                <p className="text-slate-600">{user.role}</p>
+                <p className="text-slate-600">{profile?.role || 'Member'}</p>
                 <div className="flex items-center text-sm text-slate-500">
                   <Calendar className="w-4 h-4 mr-1" />
                   Joined December 2024
@@ -156,7 +159,7 @@ const Profile = () => {
                 />
               ) : (
                 <p className="text-slate-700">
-                  {user.bio || 'No bio added yet.'}
+                  {profile?.bio || 'No bio added yet.'}
                 </p>
               )}
             </CardContent>

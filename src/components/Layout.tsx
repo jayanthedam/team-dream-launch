@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -62,7 +62,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   <Link to="/profile">
                     <Avatar className="w-8 h-8 hover:ring-2 hover:ring-blue-500 transition-all">
                       <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
-                        {user.name.charAt(0)}
+                        {profile?.name ? profile.name.charAt(0) : user.email?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
                   </Link>
