@@ -9,83 +9,128 @@ import { PenSquare, Plus, TrendingUp, Users, Lightbulb, Briefcase } from 'lucide
 import { useAuth } from '@/contexts/AuthContext';
 import CreatePostModal from '@/components/CreatePostModal';
 import FeedItem from '@/components/FeedItem';
+import { supabase } from '@/integrations/supabase/client';
 
 const Home = () => {
   const { user, profile } = useAuth();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [feedItems, setFeedItems] = useState([
-    {
-      id: 1,
-      type: 'idea' as const,
-      author: 'Sarah Johnson',
-      authorRole: 'Environmental Engineer',
-      title: 'EcoTrack - Sustainable Living App',
-      description: 'Help users track their carbon footprint and discover eco-friendly alternatives in their daily lives',
-      tags: ['React Native', 'Sustainability', 'Mobile'],
-      likes: 24,
-      comments: 8,
-      shares: 3,
-      timestamp: '3 hours ago'
-    },
-    {
-      id: 2,
-      type: 'job' as const,
-      author: 'Alex Chen',
-      authorRole: 'CTO at TechCorp',
-      title: 'Senior React Developer',
-      description: 'Join our team to build the next generation of web applications',
-      location: 'Remote',
-      compensation: '$80k-120k',
-      tags: ['React', 'TypeScript', 'Node.js'],
-      likes: 15,
-      comments: 12,
-      shares: 5,
-      timestamp: '5 hours ago'
-    },
-    {
-      id: 3,
-      type: 'post' as const,
-      author: 'Maria Rodriguez',
-      authorRole: 'Product Designer',
-      content: 'Just launched our new design system! Excited to see how it improves our development workflow. The key was focusing on consistency and developer experience. #designsystem #ux #productivity',
-      likes: 42,
-      comments: 16,
-      shares: 8,
-      timestamp: '1 day ago'
-    },
-    {
-      id: 4,
-      type: 'idea' as const,
-      author: 'David Kim',
-      authorRole: 'AI Researcher',
-      title: 'AI-Powered Learning Assistant',
-      description: 'Personalized education platform using machine learning to adapt to each student\'s learning style',
-      tags: ['AI', 'Education', 'Python'],
-      likes: 67,
-      comments: 23,
-      shares: 12,
-      timestamp: '2 days ago'
-    },
-    {
-      id: 5,
-      type: 'job' as const,
-      author: 'Lisa Zhang',
-      authorRole: 'Startup Founder',
-      title: 'UX/UI Designer',
-      description: 'Looking for a creative designer to help shape the future of fintech',
-      location: 'San Francisco, CA',
-      compensation: 'Equity + $70k',
-      tags: ['Figma', 'Fintech', 'Design'],
-      likes: 28,
-      comments: 9,
-      shares: 4,
-      timestamp: '3 days ago'
+  const [feedItems, setFeedItems] = useState([]);
+  const [stats, setStats] = useState({
+    ideas: 0,
+    jobs: 0,
+    members: 0
+  });
+
+  useEffect(() => {
+    if (user) {
+      fetchFeedData();
+      fetchStats();
     }
-  ]);
+  }, [user]);
+
+  const fetchFeedData = async () => {
+    try {
+      // Fetch ideas
+      const { data: ideas, error: ideasError } = await supabase
+        .from('ideas')
+        .select(`
+          *,
+          profiles:author_id (name, role)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (ideasError) throw ideasError;
+
+      // Fetch jobs
+      const { data: jobs, error: jobsError } = await supabase
+        .from('jobs')
+        .select(`
+          *,
+          profiles:author_id (name, role)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (jobsError) throw jobsError;
+
+      // Transform data to match feed format
+      const transformedIdeas = ideas?.map(idea => ({
+        id: idea.id,
+        type: 'idea' as const,
+        author: idea.profiles?.name || 'Unknown',
+        authorRole: idea.profiles?.role || 'Member',
+        title: idea.title,
+        description: idea.description,
+        tags: idea.tags || [],
+        likes: idea.likes_count || 0,
+        comments: idea.comments_count || 0,
+        shares: 0,
+        timestamp: formatTimestamp(idea.created_at)
+      })) || [];
+
+      const transformedJobs = jobs?.map(job => ({
+        id: job.id,
+        type: 'job' as const,
+        author: job.profiles?.name || 'Unknown',
+        authorRole: job.profiles?.role || 'Member',
+        title: job.title,
+        description: job.description,
+        location: job.location,
+        compensation: job.compensation,
+        tags: job.skills || [],
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        timestamp: formatTimestamp(job.created_at)
+      })) || [];
+
+      // Combine and sort by timestamp
+      const combinedFeed = [...transformedIdeas, ...transformedJobs]
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+      setFeedItems(combinedFeed);
+    } catch (error) {
+      console.error('Error fetching feed data:', error);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const [ideasCount, jobsCount, membersCount] = await Promise.all([
+        supabase.from('ideas').select('*', { count: 'exact', head: true }),
+        supabase.from('jobs').select('*', { count: 'exact', head: true }),
+        supabase.from('profiles').select('*', { count: 'exact', head: true })
+      ]);
+
+      setStats({
+        ideas: ideasCount.count || 0,
+        jobs: jobsCount.count || 0,
+        members: membersCount.count || 0
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays === 1) return '1 day ago';
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    
+    return date.toLocaleDateString();
+  };
 
   const handleCreatePost = (data: any) => {
     const newItem = {
-      id: feedItems.length + 1,
+      id: Date.now(), // Temporary ID
       type: data.type,
       author: profile?.name || user?.email || 'Anonymous',
       authorRole: profile?.role || 'Member',
@@ -203,7 +248,7 @@ const Home = () => {
                 <Lightbulb className="w-4 h-4 text-blue-600" />
               </div>
             </div>
-            <div className="text-lg font-semibold">127</div>
+            <div className="text-lg font-semibold">{stats.ideas}</div>
             <div className="text-sm text-slate-600">Active Ideas</div>
           </CardContent>
         </Card>
@@ -214,7 +259,7 @@ const Home = () => {
                 <Briefcase className="w-4 h-4 text-green-600" />
               </div>
             </div>
-            <div className="text-lg font-semibold">89</div>
+            <div className="text-lg font-semibold">{stats.jobs}</div>
             <div className="text-sm text-slate-600">Open Jobs</div>
           </CardContent>
         </Card>
@@ -225,7 +270,7 @@ const Home = () => {
                 <Users className="w-4 h-4 text-purple-600" />
               </div>
             </div>
-            <div className="text-lg font-semibold">1.2k</div>
+            <div className="text-lg font-semibold">{stats.members}</div>
             <div className="text-sm text-slate-600">Members</div>
           </CardContent>
         </Card>
@@ -234,7 +279,7 @@ const Home = () => {
       {/* Feed */}
       <div className="space-y-6">
         {feedItems.map((item) => (
-          <FeedItem key={item.id} item={item} />
+          <FeedItem key={`${item.type}-${item.id}`} item={item} />
         ))}
       </div>
 
