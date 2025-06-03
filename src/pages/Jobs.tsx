@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { MapPin, DollarSign, Clock, Users, Search, Filter, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Job {
   id: string;
@@ -33,6 +34,7 @@ interface Job {
 }
 
 const Jobs = () => {
+  const { user } = useAuth();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -100,9 +102,19 @@ const Jobs = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Header */}
-      <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold text-slate-900">Find Your Next Opportunity</h1>
-        <p className="text-lg text-slate-600">Discover amazing projects and join innovative teams</p>
+      <div className="flex justify-between items-center">
+        <div className="text-center flex-1">
+          <h1 className="text-3xl font-bold text-slate-900">Find Your Next Opportunity</h1>
+          <p className="text-lg text-slate-600 mt-2">Discover amazing projects and join innovative teams</p>
+        </div>
+        {user && (
+          <Link to="/submit-job">
+            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Post Job
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Filters */}
