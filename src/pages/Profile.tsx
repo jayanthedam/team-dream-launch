@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Edit, Save, X, Plus, MapPin, Calendar, Mail, Github, Linkedin, Globe } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import ActivityCalendar from '@/components/ActivityCalendar';
 
 const Profile = () => {
   const { user, profile } = useAuth();
@@ -137,9 +138,10 @@ const Profile = () => {
 
       {/* Profile Content */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="projects">Projects</TabsTrigger>
+          <TabsTrigger value="calendar">Calendar</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsList>
 
@@ -277,6 +279,17 @@ const Profile = () => {
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="calendar" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Activity Calendar</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ActivityCalendar />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="activity">
