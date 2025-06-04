@@ -20,7 +20,7 @@ interface Conversation {
   participant_1_id: string;
   participant_2_id: string;
   last_message_at: string;
-  other_user: {
+  other_participant: {
     id: string;
     name: string;
   };
@@ -28,18 +28,19 @@ interface Conversation {
     content: string;
     sender_id: string;
   };
+  unread_count: number;
 }
 
 interface MessagingContextType {
   conversations: Conversation[];
-  activeConversation: string | null;
+  currentConversation: string | null;
   messages: Message[];
   unreadCount: number;
   loading: boolean;
-  setActiveConversation: (conversationId: string | null) => void;
+  selectConversation: (conversationId: string | null) => void;
   sendMessage: (receiverId: string, content: string) => Promise<void>;
   fetchMessages: (conversationId: string) => Promise<void>;
-  markAsRead: (messageId: string) => Promise<void>;
+  markAsRead: (conversationId: string) => Promise<void>;
   refreshConversations: () => Promise<void>;
 }
 
@@ -48,7 +49,7 @@ const MessagingContext = createContext<MessagingContextType | undefined>(undefin
 export const MessagingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConversation, setActiveConversation] = useState<string | null>(null);
+  const [currentConversation, setCurrentConversation] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -96,20 +97,29 @@ export const MessagingProvider: React.FC<{ children: ReactNode }> = ({ children 
             .limit(1)
             .single();
 
+          // Count unread messages for this conversation
+          const { count: unreadCount } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('receiver_id', user.id)
+            .eq('sender_id', otherUserId)
+            .eq('read', false);
+
           return {
             ...conv,
-            other_user: {
+            other_participant: {
               id: otherUserId,
               name: profileData?.name || 'Unknown User'
             },
-            last_message: lastMessageData || undefined
+            last_message: lastMessageData || undefined,
+            unread_count: unreadCount || 0
           };
         })
       );
 
       setConversations(conversationsWithDetails);
       
-      // Count unread messages
+      // Count total unread messages
       const { count } = await supabase
         .from('messages')
         .select('*', { count: 'exact', head: true })
@@ -206,7 +216,7 @@ export const MessagingProvider: React.FC<{ children: ReactNode }> = ({ children 
         .single();
 
       // Add message to current messages if viewing this conversation
-      if (activeConversation) {
+      if (currentConversation) {
         setMessages(prev => [{
           ...messageData,
           sender_profile: {
@@ -223,22 +233,43 @@ export const MessagingProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   };
 
-  const markAsRead = async (messageId: string) => {
+  const markAsRead = async (conversationId: string) => {
+    if (!user) return;
+
     try {
+      const conversation = conversations.find(c => c.id === conversationId);
+      if (!conversation) return;
+
+      // Mark all messages from the other participant as read
       const { error } = await supabase
         .from('messages')
         .update({ read: true })
-        .eq('id', messageId);
+        .eq('receiver_id', user.id)
+        .eq('sender_id', conversation.other_participant.id)
+        .eq('read', false);
 
       if (error) throw error;
 
+      // Update local state
       setMessages(prev => 
         prev.map(msg => 
-          msg.id === messageId ? { ...msg, read: true } : msg
+          msg.sender_id === conversation.other_participant.id && msg.receiver_id === user.id
+            ? { ...msg, read: true } 
+            : msg
         )
       );
+
+      // Refresh conversations to update unread counts
+      await fetchConversations();
     } catch (error) {
-      console.error('Error marking message as read:', error);
+      console.error('Error marking messages as read:', error);
+    }
+  };
+
+  const selectConversation = (conversationId: string | null) => {
+    setCurrentConversation(conversationId);
+    if (conversationId) {
+      fetchMessages(conversationId);
     }
   };
 
@@ -254,11 +285,11 @@ export const MessagingProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   const value: MessagingContextType = {
     conversations,
-    activeConversation,
+    currentConversation,
     messages,
     unreadCount,
     loading,
-    setActiveConversation,
+    selectConversation,
     sendMessage,
     fetchMessages,
     markAsRead,

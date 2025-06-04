@@ -3,12 +3,15 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Lightbulb, Users, Briefcase, User, LogOut, Menu } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Lightbulb, Users, Briefcase, User, LogOut, Menu, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMessaging } from '@/contexts/MessagingContext';
 import { useState } from 'react';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, profile, logout } = useAuth();
+  const { unreadCount } = useMessaging();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -17,6 +20,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { name: 'Ideas', href: '/ideas', icon: Lightbulb },
     { name: 'Jobs', href: '/jobs', icon: Briefcase },
   ];
+
+  // Add Messages to navigation if user is logged in
+  if (user) {
+    navigation.push({ name: 'Messages', href: '/messages', icon: MessageCircle });
+  }
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -43,7 +51,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors relative ${
                     isActive(item.href)
                       ? 'bg-blue-100 text-blue-700'
                       : 'text-slate-600 hover:text-blue-600 hover:bg-slate-100'
@@ -51,6 +59,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 >
                   <item.icon className="w-4 h-4" />
                   <span>{item.name}</span>
+                  {item.name === 'Messages' && unreadCount > 0 && (
+                    <Badge variant="destructive" className="text-xs ml-1 min-w-[20px] h-5 flex items-center justify-center">
+                      {unreadCount}
+                    </Badge>
+                  )}
                 </Link>
               ))}
             </div>
@@ -109,7 +122,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium ${
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium relative ${
                       isActive(item.href)
                         ? 'bg-blue-100 text-blue-700'
                         : 'text-slate-600 hover:text-blue-600 hover:bg-slate-100'
@@ -118,6 +131,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   >
                     <item.icon className="w-4 h-4" />
                     <span>{item.name}</span>
+                    {item.name === 'Messages' && unreadCount > 0 && (
+                      <Badge variant="destructive" className="text-xs ml-1 min-w-[20px] h-5 flex items-center justify-center">
+                        {unreadCount}
+                      </Badge>
+                    )}
                   </Link>
                 ))}
                 {user && (
