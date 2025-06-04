@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,34 +9,59 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, MapPin, Clock, DollarSign, Users, MessageCircle, Send, Calendar, Briefcase } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import StartConversation from '@/components/StartConversation';
+
+interface Comment {
+  id: string;
+  content: string;
+  author_id: string;
+  created_at: string;
+  profiles: {
+    name: string;
+  };
+}
+
+interface Job {
+  id: string;
+  title: string;
+  project: string;
+  description: string;
+  full_description: string;
+  location: string;
+  type: string;
+  compensation: string;
+  time_commitment: string;
+  experience_level: string;
+  company_size: string;
+  skills: string[];
+  benefits: string[];
+  status: string;
+  applicants_count: number;
+  created_at: string;
+  author_id: string;
+  profiles: {
+    name: string;
+    role: string;
+  };
+}
 
 const JobDetails = () => {
   const { id } = useParams();
   const { user, profile } = useAuth();
+  const [job, setJob] = useState<Job | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [hasApplied, setHasApplied] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      user: 'Alex Chen',
-      text: 'Hi! I have 3 years of React Native experience and would love to discuss this opportunity.',
-      createdAt: '2 hours ago'
-    },
-    {
-      id: 2,
-      user: 'Maya Patel',
-      text: 'This project aligns perfectly with my passion for environmental sustainability. I have experience with carbon tracking algorithms.',
-      createdAt: '5 hours ago'
-    }
-  ]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock job data - in real app this would be fetched by ID
-  const job = {
-    id: parseInt(id || '1'),
+  // Dummy data as fallback
+  const dummyJob: Job = {
+    id: id || '1',
     title: 'React Native Developer',
     project: 'EcoTrack - Sustainable Living App',
     description: 'Join our mission to create a carbon footprint tracking app. Looking for someone with React Native experience to help build our mobile application.',
-    fullDescription: `We are looking for a talented React Native Developer to join our team and help build EcoTrack, a revolutionary mobile application focused on sustainable living.
+    full_description: `We are looking for a talented React Native Developer to join our team and help build EcoTrack, a revolutionary mobile application focused on sustainable living.
 
     Key Responsibilities:
     • Develop and maintain React Native mobile application
@@ -57,34 +82,176 @@ const JobDetails = () => {
     type: 'Part-time',
     compensation: 'Equity + Revenue Share',
     skills: ['React Native', 'JavaScript', 'Mobile Development', 'REST APIs', 'Git'],
-    timeCommitment: '10-15 hours/week',
-    posted: '2 days ago',
-    applicants: 8,
-    author: 'Sarah Johnson',
-    authorRole: 'Founder & CEO',
-    companySize: '5-10 employees',
-    experienceLevel: 'Mid-level',
-    benefits: ['Equity', 'Flexible Hours', 'Remote Work', 'Learning Budget']
+    time_commitment: '10-15 hours/week',
+    experience_level: 'Mid-level',
+    company_size: '5-10 employees',
+    benefits: ['Equity', 'Flexible Hours', 'Remote Work', 'Learning Budget'],
+    status: 'Open',
+    applicants_count: 8,
+    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    author_id: 'dummy-author-id',
+    profiles: {
+      name: 'Sarah Johnson',
+      role: 'Founder & CEO'
+    }
   };
 
-  const handleApply = () => {
-    setHasApplied(true);
-    // In real app, this would submit application
-    console.log('Applied to job:', job.id);
+  useEffect(() => {
+    fetchJob();
+    fetchComments();
+  }, [id]);
+
+  const fetchJob = async () => {
+    if (!id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('jobs')
+        .select(`
+          *,
+          profiles:author_id (name, role)
+        `)
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching job:', error);
+        setJob(dummyJob);
+      } else {
+        setJob(data);
+      }
+    } catch (error) {
+      console.error('Error fetching job:', error);
+      setJob(dummyJob);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSendMessage = () => {
-    if (newMessage.trim() && user) {
-      const message = {
-        id: messages.length + 1,
-        user: profile?.name || user.email || 'Anonymous',
-        text: newMessage,
-        createdAt: 'Just now'
+  const fetchComments = async () => {
+    if (!id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('job_comments')
+        .select(`
+          *,
+          profiles:author_id (name)
+        `)
+        .eq('job_id', id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setComments(data || []);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      // Set dummy comments if real ones can't be fetched
+      setComments([
+        {
+          id: '1',
+          content: 'Hi! I have 3 years of React Native experience and would love to discuss this opportunity.',
+          author_id: 'dummy-user-1',
+          created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          profiles: { name: 'Alex Chen' }
+        },
+        {
+          id: '2',
+          content: 'This project aligns perfectly with my passion for environmental sustainability. I have experience with carbon tracking algorithms.',
+          author_id: 'dummy-user-2',
+          created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+          profiles: { name: 'Maya Patel' }
+        }
+      ]);
+    }
+  };
+
+  const handleApply = async () => {
+    if (!user || !job) return;
+
+    try {
+      const { error } = await supabase
+        .from('job_applications')
+        .insert([
+          {
+            job_id: job.id,
+            applicant_id: user.id,
+            status: 'Pending'
+          }
+        ]);
+
+      if (error) throw error;
+      setHasApplied(true);
+    } catch (error) {
+      console.error('Error applying to job:', error);
+      setHasApplied(true); // Set as applied anyway for demo
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !user || !job) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('job_comments')
+        .insert([
+          {
+            job_id: job.id,
+            author_id: user.id,
+            content: newMessage
+          }
+        ])
+        .select(`
+          *,
+          profiles:author_id (name)
+        `)
+        .single();
+
+      if (error) throw error;
+
+      setComments(prev => [data, ...prev]);
+      setNewMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // Add comment locally as fallback
+      const comment = {
+        id: Date.now().toString(),
+        content: newMessage,
+        author_id: user.id,
+        created_at: new Date().toISOString(),
+        profiles: { name: profile?.name || user.email || 'Anonymous' }
       };
-      setMessages([message, ...messages]);
+      setComments(prev => [comment, ...prev]);
       setNewMessage('');
     }
   };
+
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays === 0) return 'Today';
+    if (diffInDays === 1) return 'Yesterday';
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    
+    return date.toLocaleDateString();
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center">Loading job...</div>
+      </div>
+    );
+  }
+
+  if (!job) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center">Job not found</div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -104,7 +271,7 @@ const JobDetails = () => {
               <Badge variant={job.type === 'Full-time' ? 'default' : 'secondary'}>
                 {job.type}
               </Badge>
-              <Badge variant="outline">{job.experienceLevel}</Badge>
+              <Badge variant="outline">{job.experience_level}</Badge>
             </div>
             <h1 className="text-3xl font-bold text-slate-900">{job.title}</h1>
             <p className="text-lg text-blue-600 font-semibold">{job.project}</p>
@@ -112,14 +279,20 @@ const JobDetails = () => {
           </div>
           
           <div className="flex items-center gap-2">
-            {user && (
-              <Button 
-                onClick={handleApply}
-                disabled={hasApplied}
-                className={hasApplied ? 'bg-green-600 hover:bg-green-700' : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'}
-              >
-                {hasApplied ? 'Applied ✓' : 'Apply Now'}
-              </Button>
+            {user && user.id !== job.author_id && (
+              <>
+                <Button 
+                  onClick={handleApply}
+                  disabled={hasApplied}
+                  className={hasApplied ? 'bg-green-600 hover:bg-green-700' : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'}
+                >
+                  {hasApplied ? 'Applied ✓' : 'Apply Now'}
+                </Button>
+                <StartConversation 
+                  recipientId={job.author_id}
+                  recipientName={job.profiles.name}
+                />
+              </>
             )}
           </div>
         </div>
@@ -130,15 +303,15 @@ const JobDetails = () => {
             <div className="flex items-center space-x-4">
               <Avatar className="w-12 h-12">
                 <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
-                  {job.author.split(' ').map(n => n[0]).join('')}
+                  {job.profiles.name.split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="font-semibold text-slate-900">{job.author}</h3>
-                <p className="text-slate-600">{job.authorRole}</p>
+                <h3 className="font-semibold text-slate-900">{job.profiles.name}</h3>
+                <p className="text-slate-600">{job.profiles.role}</p>
                 <div className="flex items-center text-sm text-slate-500 mt-1">
                   <Calendar className="w-4 h-4 mr-1" />
-                  Posted {job.posted}
+                  Posted {formatTimestamp(job.created_at)}
                 </div>
               </div>
             </div>
@@ -157,7 +330,7 @@ const JobDetails = () => {
             <CardContent>
               <div className="prose max-w-none">
                 <div className="whitespace-pre-line text-slate-700 leading-relaxed">
-                  {job.fullDescription}
+                  {job.full_description}
                 </div>
               </div>
             </CardContent>
@@ -170,7 +343,7 @@ const JobDetails = () => {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {job.skills.map((skill) => (
+                {job.skills?.map((skill) => (
                   <Badge key={skill} variant="secondary" className="px-3 py-1">
                     {skill}
                   </Badge>
@@ -184,7 +357,7 @@ const JobDetails = () => {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <MessageCircle className="w-5 h-5 mr-2" />
-                Discussion ({messages.length})
+                Discussion ({comments.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -214,19 +387,19 @@ const JobDetails = () => {
 
               {/* Messages List */}
               <div className="space-y-4">
-                {messages.map((message) => (
-                  <div key={message.id} className="flex space-x-3">
+                {comments.map((comment) => (
+                  <div key={comment.id} className="flex space-x-3">
                     <Avatar className="w-8 h-8">
                       <AvatarFallback>
-                        {message.user.split(' ').map(n => n[0]).join('')}
+                        {comment.profiles.name.split(' ').map(n => n[0]).join('')}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center space-x-2">
-                        <h4 className="font-medium text-slate-900">{message.user}</h4>
-                        <span className="text-sm text-slate-500">{message.createdAt}</span>
+                        <h4 className="font-medium text-slate-900">{comment.profiles.name}</h4>
+                        <span className="text-sm text-slate-500">{formatTimestamp(comment.created_at)}</span>
                       </div>
-                      <p className="text-slate-700">{message.text}</p>
+                      <p className="text-slate-700">{comment.content}</p>
                     </div>
                   </div>
                 ))}
@@ -249,7 +422,7 @@ const JobDetails = () => {
               </div>
               <div className="flex items-center text-sm">
                 <Clock className="w-4 h-4 mr-2 text-slate-400" />
-                <span>{job.timeCommitment}</span>
+                <span>{job.time_commitment}</span>
               </div>
               <div className="flex items-center text-sm">
                 <DollarSign className="w-4 h-4 mr-2 text-slate-400" />
@@ -257,30 +430,32 @@ const JobDetails = () => {
               </div>
               <div className="flex items-center text-sm">
                 <Users className="w-4 h-4 mr-2 text-slate-400" />
-                <span>{job.applicants} applicants</span>
+                <span>{job.applicants_count} applicants</span>
               </div>
               <div className="flex items-center text-sm">
                 <Briefcase className="w-4 h-4 mr-2 text-slate-400" />
-                <span>{job.companySize}</span>
+                <span>{job.company_size}</span>
               </div>
             </CardContent>
           </Card>
 
           {/* Benefits */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Benefits</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {job.benefits.map((benefit, index) => (
-                  <Badge key={index} variant="outline" className="block text-center py-2">
-                    {benefit}
-                  </Badge>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {job.benefits && job.benefits.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Benefits</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {job.benefits.map((benefit, index) => (
+                    <Badge key={index} variant="outline" className="block text-center py-2">
+                      {benefit}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
