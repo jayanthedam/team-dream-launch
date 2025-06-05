@@ -17,6 +17,8 @@ import SubmitJob from "./pages/SubmitJob";
 import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import PublicProfile from "./pages/PublicProfile";
+import Teams from "./pages/Teams";
+import Search from "./pages/Search";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Auth from "./pages/Auth";
@@ -44,6 +46,8 @@ const App = () => (
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/:username" element={<PublicProfile />} />
+                <Route path="/teams" element={<Teams />} />
+                <Route path="/search" element={<Search />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
