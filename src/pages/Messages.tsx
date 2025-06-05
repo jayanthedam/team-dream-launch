@@ -16,7 +16,7 @@ interface Message {
   receiver_id: string;
   created_at: string;
   read: boolean;
-  profiles: {
+  sender_profile?: {
     name: string;
   };
 }
@@ -26,7 +26,7 @@ interface Conversation {
   participant_1_id: string;
   participant_2_id: string;
   last_message_at: string;
-  profiles: {
+  other_participant?: {
     name: string;
   };
   unread_count?: number;
@@ -65,24 +65,35 @@ const Messages = () => {
     try {
       const { data, error } = await supabase
         .from('conversations')
-        .select(`
-          *,
-          profiles:participant_1_id (name),
-          participant_2_profiles:participant_2_id (name)
-        `)
+        .select('*')
         .or(`participant_1_id.eq.${user?.id},participant_2_id.eq.${user?.id}`)
-        .order('last_message_at', { ascending: false, nullsLast: true });
+        .order('last_message_at', { ascending: false });
 
       if (error) throw error;
 
-      const formattedConversations = data?.map(conv => ({
-        ...conv,
-        profiles: conv.participant_1_id === user?.id 
-          ? conv.participant_2_profiles 
-          : conv.profiles
-      })) || [];
+      // Fetch other participant details for each conversation
+      const conversationsWithDetails = await Promise.all(
+        (data || []).map(async (conv) => {
+          const otherParticipantId = conv.participant_1_id === user?.id 
+            ? conv.participant_2_id 
+            : conv.participant_1_id;
 
-      setConversations(formattedConversations);
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('id', otherParticipantId)
+            .single();
+
+          return {
+            ...conv,
+            other_participant: {
+              name: profileData?.name || 'Unknown User'
+            }
+          };
+        })
+      );
+
+      setConversations(conversationsWithDetails);
     } catch (error) {
       console.error('Error fetching conversations:', error);
     } finally {
@@ -92,17 +103,36 @@ const Messages = () => {
 
   const fetchMessages = async (conversationId: string) => {
     try {
+      const conversation = conversations.find(c => c.id === conversationId);
+      if (!conversation) return;
+
       const { data, error } = await supabase
         .from('messages')
-        .select(`
-          *,
-          profiles:sender_id (name)
-        `)
-        .or(`sender_id.eq.${user?.id},receiver_id.eq.${user?.id}`)
-        .order('created_at', { ascending: true }); // Changed to ascending to show oldest first
+        .select('*')
+        .or(`and(sender_id.eq.${conversation.participant_1_id},receiver_id.eq.${conversation.participant_2_id}),and(sender_id.eq.${conversation.participant_2_id},receiver_id.eq.${conversation.participant_1_id})`)
+        .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setMessages(data || []);
+
+      // Fetch sender profiles for messages
+      const messagesWithProfiles = await Promise.all(
+        (data || []).map(async (message) => {
+          const { data: senderProfile } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('id', message.sender_id)
+            .single();
+
+          return {
+            ...message,
+            sender_profile: {
+              name: senderProfile?.name || 'Unknown User'
+            }
+          };
+        })
+      );
+
+      setMessages(messagesWithProfiles);
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
@@ -111,12 +141,12 @@ const Messages = () => {
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !user) return;
 
-    const otherParticipant = conversations.find(c => c.id === selectedConversation);
-    if (!otherParticipant) return;
+    const conversation = conversations.find(c => c.id === selectedConversation);
+    if (!conversation) return;
 
-    const receiverId = otherParticipant.participant_1_id === user.id 
-      ? otherParticipant.participant_2_id 
-      : otherParticipant.participant_1_id;
+    const receiverId = conversation.participant_1_id === user.id 
+      ? conversation.participant_2_id 
+      : conversation.participant_1_id;
 
     try {
       const { error } = await supabase
@@ -166,12 +196,12 @@ const Messages = () => {
                   <div className="flex items-center space-x-3">
                     <Avatar>
                       <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
-                        {conversation.profiles?.name?.split(' ').map(n => n[0]).join('') || 'U'}
+                        {conversation.other_participant?.name?.split(' ').map(n => n[0]).join('') || 'U'}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-slate-900 truncate">
-                        {conversation.profiles?.name || 'Unknown User'}
+                        {conversation.other_participant?.name || 'Unknown User'}
                       </p>
                       <p className="text-xs text-slate-500">
                         {conversation.last_message_at ? 
@@ -198,7 +228,7 @@ const Messages = () => {
             <>
               <CardHeader className="border-b">
                 <CardTitle>
-                  {conversations.find(c => c.id === selectedConversation)?.profiles?.name || 'Chat'}
+                  {conversations.find(c => c.id === selectedConversation)?.other_participant?.name || 'Chat'}
                 </CardTitle>
               </CardHeader>
               

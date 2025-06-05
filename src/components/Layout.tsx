@@ -17,7 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import GlobalSearch from './GlobalSearch';
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, logout } = useAuth();
   const location = useLocation();
 
   const navigation = [
@@ -117,7 +117,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={signOut}
+                      onClick={logout}
                       className="hidden md:flex text-slate-600 hover:text-slate-900"
                     >
                       <LogOut className="w-4 h-4" />
