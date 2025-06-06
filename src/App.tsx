@@ -18,6 +18,8 @@ import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import PublicProfile from "./pages/PublicProfile";
 import Teams from "./pages/Teams";
+import CreateTeam from "./pages/CreateTeam";
+import TeamDetails from "./pages/TeamDetails";
 import Search from "./pages/Search";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -47,6 +49,8 @@ const App = () => (
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/:username" element={<PublicProfile />} />
                 <Route path="/teams" element={<Teams />} />
+                <Route path="/create-team" element={<CreateTeam />} />
+                <Route path="/teams/:id" element={<TeamDetails />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/login" element={<Login />} />
