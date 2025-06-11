@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -67,12 +66,12 @@ const TeamDetails = () => {
 
       setTeam(teamData);
 
-      // Fetch team members
+      // Fetch team members with profiles
       const { data: membersData, error: membersError } = await supabase
         .from('team_members')
         .select(`
           *,
-          profiles(name, email, bio)
+          profiles!team_members_user_id_fkey(name, email, bio)
         `)
         .eq('team_id', id);
 
