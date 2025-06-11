@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Heart, MessageCircle, Share, MoreHorizontal } from 'lucide-react';
+import { Heart, MessageCircle, Share } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import DeleteDropdown from './DeleteDropdown';
 
 interface Post {
   id: string;
@@ -15,6 +16,7 @@ interface Post {
   likes_count: number;
   comments_count: number;
   created_at: string;
+  author_id: string;
   author: {
     name: string;
     email: string;
@@ -31,6 +33,7 @@ const PostCard = ({ post, onUpdate }: PostCardProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLiking, setIsLiking] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -86,6 +89,39 @@ const PostCard = ({ post, onUpdate }: PostCardProps) => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!user || isDeleting) return;
+
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', post.id)
+        .eq('author_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Post deleted successfully.",
+      });
+
+      onUpdate();
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete post. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const isOwner = user?.id === post.author_id;
+
   return (
     <Card className="shadow-md hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">
@@ -101,9 +137,10 @@ const PostCard = ({ post, onUpdate }: PostCardProps) => {
               <p className="text-sm text-slate-500">{formatTimestamp(post.created_at)}</p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" className="p-1">
-            <MoreHorizontal className="w-4 h-4" />
-          </Button>
+          <DeleteDropdown 
+            onDelete={handleDelete}
+            isOwner={isOwner}
+          />
         </div>
       </CardHeader>
 
