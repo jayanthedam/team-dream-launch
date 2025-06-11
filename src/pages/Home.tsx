@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,12 +7,14 @@ import { Input } from '@/components/ui/input';
 import { PenSquare, Plus, TrendingUp, Users, Lightbulb, Briefcase, ArrowRight, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import CreatePostModal from '@/components/CreatePostModal';
+import PostCard from '@/components/PostCard';
 import FeedItem from '@/components/FeedItem';
 import { supabase } from '@/integrations/supabase/client';
 
 const Home = () => {
   const { user, profile } = useAuth();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [posts, setPosts] = useState([]);
   const [feedItems, setFeedItems] = useState([]);
   const [stats, setStats] = useState({
     ideas: 0,
@@ -23,10 +24,40 @@ const Home = () => {
 
   useEffect(() => {
     if (user) {
+      fetchPosts();
       fetchFeedData();
       fetchStats();
     }
   }, [user]);
+
+  const fetchPosts = async () => {
+    try {
+      const { data: postsData, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          profiles!posts_author_id_fkey (name, email),
+          post_likes!left (user_id)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+
+      const transformedPosts = postsData?.map(post => ({
+        ...post,
+        author: {
+          name: post.profiles?.name || 'Unknown',
+          email: post.profiles?.email || ''
+        },
+        user_has_liked: post.post_likes?.some((like: any) => like.user_id === user?.id) || false
+      })) || [];
+
+      setPosts(transformedPosts);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    }
+  };
 
   const fetchFeedData = async () => {
     try {
@@ -38,7 +69,7 @@ const Home = () => {
           profiles:author_id (name, role)
         `)
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(3);
 
       if (ideasError) throw ideasError;
 
@@ -50,7 +81,7 @@ const Home = () => {
           profiles:author_id (name, role)
         `)
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(3);
 
       if (jobsError) throw jobsError;
 
@@ -128,28 +159,11 @@ const Home = () => {
     return date.toLocaleDateString();
   };
 
-  const handleCreatePost = (data: any) => {
-    const newItem = {
-      id: Date.now(), // Temporary ID
-      type: data.type,
-      author: profile?.name || user?.email || 'Anonymous',
-      authorRole: profile?.role || 'Member',
-      content: data.content,
-      title: data.title,
-      description: data.description,
-      location: data.location,
-      compensation: data.compensation,
-      tags: data.tags,
-      likes: 0,
-      comments: 0,
-      shares: 0,
-      timestamp: 'Just now'
-    };
-    setFeedItems([newItem, ...feedItems]);
+  const handleCreatePost = () => {
+    fetchPosts();
   };
 
   if (!user) {
-    // Enhanced hero page for non-logged in users
     return (
       <div className="space-y-0">
         {/* Hero Section */}
@@ -255,7 +269,7 @@ const Home = () => {
           <h1 className="text-3xl font-bold text-slate-900 mb-2">
             Welcome back, {profile?.name?.split(' ')[0] || user?.email?.split('@')[0]}!
           </h1>
-          <p className="text-lg text-slate-600">What would you like to create today?</p>
+          <p className="text-lg text-slate-600">What would you like to share today?</p>
         </div>
 
         {/* Create Post Section */}
@@ -269,7 +283,7 @@ const Home = () => {
               </Avatar>
               <div className="flex-1">
                 <Input
-                  placeholder="Share an update, idea, or opportunity..."
+                  placeholder="Share your thoughts, ideas, or updates..."
                   className="cursor-pointer h-12 text-base border-slate-200 focus:border-blue-300"
                   onClick={() => setIsCreateModalOpen(true)}
                   readOnly
@@ -284,7 +298,7 @@ const Home = () => {
                 onClick={() => setIsCreateModalOpen(true)}
               >
                 <PenSquare className="w-6 h-6 mb-2" />
-                <span className="text-sm font-medium">Post Update</span>
+                <span className="text-sm font-medium">Create Post</span>
               </Button>
               <Button
                 variant="ghost"
@@ -354,31 +368,42 @@ const Home = () => {
           </Button>
         </div>
 
-        {/* Feed */}
+        {/* Posts Feed */}
         <div className="space-y-6">
+          {posts.length > 0 && (
+            <div className="space-y-6">
+              {posts.map((post) => (
+                <PostCard key={post.id} post={post} onUpdate={fetchPosts} />
+              ))}
+            </div>
+          )}
+
+          {/* Ideas and Jobs Feed */}
           {feedItems.length > 0 ? (
             feedItems.map((item) => (
               <FeedItem key={`${item.type}-${item.id}`} item={item} />
             ))
           ) : (
-            <Card className="text-center py-12 border-0 shadow-md">
-              <CardContent>
-                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <TrendingUp className="w-8 h-8 text-slate-400" />
-                </div>
-                <h3 className="text-lg font-medium text-slate-900 mb-2">No activity yet</h3>
-                <p className="text-slate-600 mb-4">Be the first to share something with the community!</p>
-                <Button onClick={() => setIsCreateModalOpen(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Post
-                </Button>
-              </CardContent>
-            </Card>
+            posts.length === 0 && (
+              <Card className="text-center py-12 border-0 shadow-md">
+                <CardContent>
+                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <TrendingUp className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-slate-900 mb-2">No activity yet</h3>
+                  <p className="text-slate-600 mb-4">Be the first to share something with the community!</p>
+                  <Button onClick={() => setIsCreateModalOpen(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Post
+                  </Button>
+                </CardContent>
+              </Card>
+            )
           )}
         </div>
 
         {/* Load More */}
-        {feedItems.length > 0 && (
+        {(posts.length > 0 || feedItems.length > 0) && (
           <div className="text-center py-6">
             <Button variant="outline" size="lg">
               Load More Posts

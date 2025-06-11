@@ -10,7 +10,6 @@ import {
   User, 
   LogOut, 
   Users,
-  Search as SearchIcon,
   Bell
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,7 +23,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { name: 'Ideas', href: '/ideas', icon: Lightbulb },
     { name: 'Jobs', href: '/jobs', icon: Briefcase },
     { name: 'Teams', href: '/teams', icon: Users },
-    { name: 'Search', href: '/search', icon: SearchIcon },
   ];
 
   const userNavigation = user ? [
@@ -151,7 +149,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           {/* Mobile Navigation */}
           <div className="lg:hidden border-t border-slate-100 pt-2 pb-2">
             <div className="flex justify-around">
-              {navigation.slice(0, 4).map((item) => {
+              {navigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = isActivePath(item.href);
                 return (
