@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,11 +48,11 @@ const IdeaCard = ({ idea, onUpdate }: IdeaCardProps) => {
 
     setIsDeleting(true);
     try {
+      // Only filter by id; RLS handles ownership.
       const { error } = await supabase
         .from('ideas')
         .delete()
-        .eq('id', idea.id)
-        .eq('author_id', user.id);
+        .eq('id', idea.id);
 
       if (error) throw error;
 
@@ -63,11 +62,14 @@ const IdeaCard = ({ idea, onUpdate }: IdeaCardProps) => {
       });
 
       if (onUpdate) onUpdate();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting idea:', error);
       toast({
         title: "Error",
-        description: "Failed to delete idea. Please try again.",
+        description:
+          error?.message?.includes('violates row-level security policy')
+            ? "You do not have permission to delete this idea."
+            : "Failed to delete idea. Please try again.",
         variant: "destructive"
       });
     } finally {

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,11 +50,11 @@ const JobCard = ({ job, onUpdate }: JobCardProps) => {
 
     setIsDeleting(true);
     try {
+      // Only filter on primary key; RLS handles auth.
       const { error } = await supabase
         .from('jobs')
         .delete()
-        .eq('id', job.id)
-        .eq('author_id', user.id);
+        .eq('id', job.id);
 
       if (error) throw error;
 
@@ -65,11 +64,14 @@ const JobCard = ({ job, onUpdate }: JobCardProps) => {
       });
 
       if (onUpdate) onUpdate();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting job:', error);
       toast({
         title: "Error",
-        description: "Failed to delete job. Please try again.",
+        description:
+          error?.message?.includes('violates row-level security policy')
+            ? "You do not have permission to delete this job."
+            : "Failed to delete job. Please try again.",
         variant: "destructive"
       });
     } finally {
