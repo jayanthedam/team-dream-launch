@@ -24,6 +24,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import EmailVerified from "./pages/EmailVerified";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const App = () => (
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="*" element={<NotFound />} />
+                <Route path="/emailverified" element={<EmailVerified />} />
               </Routes>
             </Layout>
           </BrowserRouter>
